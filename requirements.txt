@@ -4,3 +4,4 @@ dotenv
 jupyter
 ipykernel
 psycopg2
+jupysql
