@@ -1,24 +1,39 @@
 # BaseDeDatos2025
 
-# Docker Compose - PostgreSQL + pgAdmin
+# Entorno de Desarrollo con PostgreSQL + pgAdmin
 
-Este docker-compose configura un entorno completo con PostgreSQL y pgAdmin conectados mediante networking.
+Este proyecto proporciona un entorno completo de desarrollo con PostgreSQL y pgAdmin usando Docker Compose, ideal para proyectos de bases de datos y análisis de datos.
 
 ## 🚀 Configuración Rápida
 
-### 1. Crear archivo .env
-Copia el contenido de `env_template.txt` a un archivo `.env` en el mismo directorio:
-
+### 1. Clonar el repositorio
 ```bash
-# En Windows PowerShell
-Copy-Item env_template.txt .env
-
-# En Linux/Mac
-cp env_template.txt .env
+git clone <url-del-repositorio>
+cd BaseDeDatos2025
 ```
 
-### 2. Personalizar variables (opcional)
-Edita el archivo `.env` para cambiar las credenciales por defecto:
+### 2. Instalar dependencias con uv
+```bash
+# Instalar uv si no lo tienes
+pip install uv
+
+# Crear y activar entorno virtual
+uv venv
+source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+
+# Instalar dependencias
+uv pip install -r requirements.txt
+```
+
+### 3. Configurar variables de entorno
+El archivo `.env` no se sube al repositorio (está en `.gitignore`) por buenas prácticas de seguridad. En su lugar, copia el archivo de ejemplo:
+
+```bash
+# Copiar el archivo de ejemplo
+cp .env.example .env
+```
+
+Luego edita el archivo `.env` con tus configuraciones:
 
 ```env
 # Configuración de PostgreSQL
@@ -33,16 +48,13 @@ PGADMIN_PASSWORD=admin123
 PGADMIN_PORT=8080
 ```
 
-### 3. Ejecutar los servicios
+### 4. Ejecutar los servicios
 ```bash
 # Levantar todos los servicios
 docker-compose up -d
 
 # Ver logs en tiempo real
 docker-compose logs -f
-
-# Detener servicios
-docker-compose down
 ```
 
 ## 📊 Acceso a los Servicios
@@ -50,14 +62,14 @@ docker-compose down
 ### PostgreSQL
 - **Host**: localhost
 - **Puerto**: 5432 (o el configurado en POSTGRES_PORT)
-- **Base de datos**: mydatabase
-- **Usuario**: postgres
-- **Contraseña**: mysecretpassword
+- **Base de datos**: mydatabase (o la configurada en POSTGRES_DB)
+- **Usuario**: postgres (o el configurado en POSTGRES_USER)
+- **Contraseña**: mysecretpassword (o la configurada en POSTGRES_PASSWORD)
 
 ### pgAdmin
 - **URL**: http://localhost:8080 (o el puerto configurado en PGADMIN_PORT)
-- **Email**: admin@admin.com
-- **Contraseña**: admin123
+- **Email**: admin@admin.com (o el configurado en PGADMIN_EMAIL)
+- **Contraseña**: admin123 (o la configurada en PGADMIN_PASSWORD)
 
 ## 🔧 Configuración de pgAdmin
 
@@ -76,15 +88,18 @@ docker-compose down
 .
 ├── docker-compose.yml          # Configuración principal
 ├── .env                        # Variables de entorno (crear manualmente)
-├── env_template.txt            # Plantilla de variables
-├── data/                       # Datos GTFS
-│   ├── feed-gtfs/             # Archivos GTFS (.txt)
-│   └── feed_gtfs_buenosaires.zip
-├── init-scripts/               # Scripts de inicialización
-│   ├── 1-gtfs_schema.sql      # Creación del esquema GTFS
-│   ├── 2-load_gtfs_data.sql   # Carga de datos con manejo de errores
-│   └── 3-verify_data.sql      # Verificación de integridad
-└── README_Docker.md           # Este archivo
+├── requirements.txt            # Dependencias de Python
+├── data/                       # Carpeta para datos del proyecto
+│   └── .gitkeep               # Mantiene la carpeta en git
+├── init-scripts/               # Scripts de inicialización de la base de datos
+│   ├── 1-schema.sql           # Creación del esquema
+│   ├── 2-load_data.sql        # Carga de datos
+│   └── .gitkeep               # Mantiene la carpeta en git
+├── Clases/                     # Material de clases y notebooks
+│   ├── 00_Introducción/
+│   ├── 01_Bases_De_Datos/
+│   └── 02_SQL/
+└── README.md                   # Este archivo
 ```
 
 ## 🛠️ Comandos Útiles
@@ -115,24 +130,26 @@ docker-compose exec postgres psql -U postgres -d mydatabase
 - Cambia las contraseñas por defecto en producción
 - Considera usar secrets de Docker para entornos de producción
 
-## 📊 Carga de Datos GTFS
+## 📊 Carga de Datos
 
-El sistema carga automáticamente los datos GTFS desde la carpeta `data/feed-gtfs/`:
+El sistema carga automáticamente los datos desde la carpeta `data/` usando los scripts en `init-scripts/`:
 
 ### Características de la carga:
-- ✅ **Carga simple y directa**: Script simplificado sin complejidad innecesaria
-- ✅ **Rutas correctas**: Usa `/data/feed-gtfs/` para acceder a los archivos
-- ✅ **Continuación en errores**: `\set ON_ERROR_STOP off` permite que continúe si hay errores
-- ✅ **Verificación automática**: El script `3-verify_data.sql` verifica la integridad
+- ✅ **Carga automática**: Los scripts se ejecutan al inicializar PostgreSQL
+- ✅ **Manejo de errores**: `\set ON_ERROR_STOP off` permite que continúe si hay errores
+- ✅ **Flexibilidad**: Puedes modificar los scripts según tus necesidades
+- ✅ **Verificación**: Incluye scripts de verificación de integridad
 
-### Archivos que se cargan:
-- `agency.txt` - Información de agencias de transporte
-- `stops.txt` - Paradas de transporte público
-- `routes.txt` - Rutas de transporte
-- `shapes.txt` - Geometrías de las rutas
-- `trips.txt` - Viajes específicos
-- `stop_times.txt` - Horarios de paradas
-- `calendar_dates.txt` - Calendario de servicios
+### Estructura de scripts:
+- `1-schema.sql` - Creación de tablas y esquemas
+- `2-load_data.sql` - Carga de datos desde archivos CSV/TSV
+- `3-verify_data.sql` - Verificación de integridad (opcional)
+
+### Cómo agregar tus datos:
+1. Coloca tus archivos de datos en la carpeta `data/`
+2. Modifica `1-schema.sql` para crear las tablas necesarias
+3. Actualiza `2-load_data.sql` para cargar tus datos específicos
+4. Reinicia los contenedores: `docker-compose down && docker-compose up -d`
 
 ## 🐛 Solución de Problemas
 
@@ -149,14 +166,23 @@ El sistema carga automáticamente los datos GTFS desde la carpeta `data/feed-gtf
 - Verifica que los volúmenes estén creados: `docker volume ls`
 - No uses `docker-compose down -v` a menos que quieras borrar todo
 
-### Tiempo de carga de datos GTFS
-La carga inicial puede tomar tiempo debido al tamaño de los archivos:
-- **agency.txt**: ~21KB - Carga rápida
-- **stops.txt**: ~3.1MB - Carga rápida  
-- **routes.txt**: ~74KB - Carga rápida
-- **shapes.txt**: ~29MB - Carga media
-- **trips.txt**: ~31MB - Carga media
-- **stop_times.txt**: ~1.3GB - **Carga lenta** (puede tomar 10-30 minutos)
-- **calendar_dates.txt**: ~8.4MB - Carga rápida
+### Tiempo de carga de datos
+La carga inicial puede tomar tiempo dependiendo del tamaño de tus archivos:
+- **Archivos pequeños** (< 1MB): Carga rápida
+- **Archivos medianos** (1-100MB): Carga media
+- **Archivos grandes** (> 100MB): Carga lenta (puede tomar varios minutos)
 
-**Consejo**: Para la primera carga, ejecuta `docker-compose logs -f postgres` para monitorear el progreso.
+**Consejo**: Para monitorear el progreso de la carga, ejecuta:
+```bash
+docker-compose logs -f postgres
+```
+
+### Problemas con el entorno virtual
+Si tienes problemas con el entorno virtual:
+```bash
+# Recrear el entorno virtual
+rm -rf .venv
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
