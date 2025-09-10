@@ -210,5 +210,10 @@ data/feed-gtfs/*
 init-scripts/*.sql
 *.zip
 
+# Permitir archivos .gitkeep para mantener las carpetas
+!.gitkeep
+!data/.gitkeep
+!init-scripts/.gitkeep
+
 init-scripts\1-gtfs_schema.sql
 init-scripts\2-load_gtfs_data.sql
